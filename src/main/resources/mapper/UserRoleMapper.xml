@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="vn.dasvision.template.persistence.mapper.UserRoleMapper">
+    <resultMap id="userRole" type="vn.dasvision.template.persistence.dto.UserRole">
+        <result column="id" property="id" />
+        <result column="role_name" property="roleName" />
+        <result column="role_desc" property="roleDesc" />
+        <result column="create_date" property="createDate" />
+        <result column="modify_date" property="modifyDate" />
+        <result column="role_state" property="roleState"/>
+        <result column="role_icon" property="icon"/>
+    </resultMap>
+
+    <!-- sql:  list all -->
+    <sql id="select_user_role">
+        SELECT *
+        from user_role
+    </sql>
+
+    <select id="list" resultMap="userRole" parameterType="map">
+        <include refid="select_user_role"></include>
+        WHERE role_state = 1
+        ORDER BY role_name asc
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+
+    <insert id="insert" parameterType="map">
+        INSERT INTO user_role(
+            role_name,
+            role_desc,
+            create_date,
+            modify_date,
+            role_icon,
+            role_state)
+        VALUES (
+            #{roleName},
+            #{roleDesc},
+            NOW(),
+            NOW(),
+            #{icon},
+            1)
+    </insert>
+
+    <select id="total" resultType="int" parameterType="map" >
+        SELECT COUNT(*) FROM user_role
+        WHERE role_state = 1
+    </select>
+
+    <select id="totalById" resultType="int" parameterType="map" >
+        SELECT COUNT(*) FROM user_role
+        WHERE id = #{id}
+    </select>
+
+
+    <select id="listByKeyword" resultMap="userRole" parameterType="map">
+        <include refid="select_user_role"></include>
+        WHERE role_name like concat("%", #{keyword},"%") AND role_state = 1
+        ORDER BY role_name asc
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="getUserRoleByRoleName" resultType="vn.dasvision.template.persistence.dto.UserRole" parameterType="map">
+        SELECT *
+        FROM user_role
+        WHERE role_name = #{roleName}
+        LIMIT 1
+    </select>
+
+    <select id="getUserRoleById" resultMap="userRole" parameterType="map">
+        SELECT *
+        FROM user_role
+        WHERE id = #{id} AND role_state = 1
+        LIMIT 1
+
+    </select>
+
+    <update id="deleteUserRole" parameterType="map">
+        UPDATE user_role SET
+            role_state = 2
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateUserRole" parameterType="map">
+        UPDATE user_role SET
+            role_name = #{roleName},
+            role_desc = #{roleDesc},
+            modify_date = NOW(),
+            role_icon = #{roleIcon}
+        WHERE id = #{id}  AND role_state = 1
+    </update>
+
+</mapper>

@@ -1,0 +1,112 @@
+package vn.dasvision.template.api.formatcheck;
+
+import vn.dasvision.template.api.requestbody.UserRoleRequest;
+import vn.dasvision.template.persistence.dto.UserRole;
+
+import java.io.ByteArrayInputStream;
+import java.net.URLConnection;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class request {
+
+    public Map<String,Object> checkAddUserRoleRequestBody(UserRoleRequest userRoleRequest) throws Exception{
+        Map<String, Object> res = new HashMap<>();
+        Map<String, Object> errors = new HashMap<>();
+        boolean exitErr = false;
+        if(userRoleRequest.getRoleName() == null || userRoleRequest.getRoleName().equals("") ){
+            errors.put("roleName", "roleNameNotNull");
+            res.put("errors", errors);
+
+        }
+        if(userRoleRequest.getRoleName().matches(".*[ ]+].*")){
+            errors.put("roleName", "role can hava space");
+            exitErr = true; // 422
+        }
+        if(userRoleRequest.getIcon() != null && userRoleRequest.getIcon().equals("") == false ){
+            errors.put("icon", "icon incorrect format");
+            exitErr= true;
+        }
+
+        if(userRoleRequest.getIcon() != null ){
+            byte[] bytes = Base64.getDecoder().decode(userRoleRequest.getIcon());
+
+            ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+            String iconType = URLConnection.guessContentTypeFromStream(bis);
+
+            if (iconType == null){
+                errors.put("icon", "icon incorrect format");
+                exitErr = true; // 422
+            }
+            else if (iconType.equals("image/png") || iconType.equals("image/jpg") || iconType.equals("image/jpeg")){
+
+            }else {
+                errors.put("icon", "icon incorrect format");
+                errors.put("icon", iconType);
+                exitErr = true; // 422
+            }
+        }
+        if (exitErr){
+            res.put("message", "inputInvalid");
+            res.put("errors", errors);
+            return res;
+        }
+        else return  new HashMap<>();
+
+
+    };
+
+
+    public Map<String, Object> updateUserRole(UserRole userRole) throws Exception{
+        Map<String, Object> res = new HashMap<>();
+        Map<String, Object> reqMap = new HashMap<>();
+        Map<String, Object> errors = new HashMap<>();
+        boolean update = false;
+
+        reqMap.put("id",userRole.getId());
+        reqMap.put("roleName", userRole.getRoleName());
+        reqMap.put("roleDesc", userRole.getRoleDesc());
+        reqMap.put("icon", userRole.getIcon());
+
+
+        UserRole userRoleDB  = userRoleMapper.getUserRoleById(reqMap);
+
+        if(userRoleDB == null){
+            res.put("message", "inputInvalid");
+            errors.put("id", "roleIdNotExit");
+            res.put("errors", errors);
+            return res;
+        }
+
+        if ( Objects.equals(userRoleDB.getRoleName(),userRole.getRoleName())== false){
+            // check Duplicate name role name
+            if (userRoleMapper.getUserRoleByRoleName(reqMap) == null ){
+                update = true;
+            } else {
+                res.put("message", "inputInvalid");
+                errors.put("role name", "duplicate role name");
+                res.put("errors", errors);
+                return res;
+            }
+        }
+        if (Objects.equals(userRoleDB.getRoleDesc(),userRole.getRoleDesc() ) == false ) update = true;
+        if (Objects.equals(userRoleDB.getIcon(), userRole.getIcon()) == false) update = true;
+
+        if (update == true ){
+            userRoleMapper.updateUserRole(reqMap);
+            res.put("message", "update user role successful");
+            return res;
+        }
+
+        res.put("message", "inputInvalid");
+        errors.put("infor", "you don't change anything");
+        res.put("errors", errors);
+        return res;
+    }
+
+
+
+
+}

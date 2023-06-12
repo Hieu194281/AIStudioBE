@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="vn.dasvision.template.persistence.mapper.UserMapper">
+    <resultMap id="user" type="vn.dasvision.template.persistence.dto.User">
+        <result column="id" property="id" />
+        <result column="user_role_id" property="userRoleId" />
+        <result column="user_email" property="userEmail" />
+        <result column="user_avatar" property="userAvatar" />
+        <result column="user_first_name" property="userFirstName" />
+        <result column="user_last_name" property="userLastName" />
+        <result column="user_date_of_birth" property="userDateOfBirth" />
+        <result column="user_address" property="userAddress" />
+        <result column="user_phone_number" property="userPhoneNumber" />
+        <result column="user_init_password" property="userInitPassword" />
+        <result column="user_password" property="userPassword" />
+
+        <result column="user_state" property="userState" />
+        <result column="create_date" property="createDate" />
+        <result column="modify_date" property="modifyDate" />
+    </resultMap>
+
+    <resultMap id="user_in_list" type="vn.dasvision.template.persistence.dto.UserInList">
+        <result column="id" property="id" />
+        <result column="role_name" property="userRoleName" />
+        <result column="user_email" property="userEmail" />
+        <result column="user_avatar" property="userAvatar" />
+        <result column="user_first_name" property="userFirstName" />
+        <result column="user_last_name" property="userLastName" />
+        <result column="user_date_of_birth" property="userDateOfBirth" />
+        <result column="user_address" property="userAddress" />
+        <result column="user_phone_number" property="userPhoneNumber" />
+        <result column="user_init_password" property="userInitPassword" />
+<!--        <result column="user_password" property="userPassword" />-->
+
+        <result column="user_state" property="userState" />
+        <result column="create_date" property="createDate" />
+        <result column="modify_date" property="modifyDate" />
+    </resultMap>
+
+
+    <resultMap id="user_login" type="vn.dasvision.template.persistence.dto.UserLogin">
+        <result column="id" property="id" />
+        <result column="role_name" property="userRoleName" />
+        <result column="user_email" property="userEmail" />
+        <result column="user_init_password" property="userInitPassword" />
+        <result column="user_password" property="userPassword" />
+        <result column="user_state" property="userState" />
+
+        <result column="user_last_time_changed_password" property="userLastTimeChangedPassword" />
+        <result column="user_number_login_attempts" property="userNumberLoginAttempts" />
+
+    </resultMap>
+
+
+    <insert id="addUser" parameterType="vn.dasvision.template.persistence.dto.User">
+        INSERT INTO user(
+        user_role_id,
+        user_email,
+        user_avatar,
+        user_first_name,
+        user_last_name,
+        user_date_of_birth,
+        user_address,
+        user_phone_number,
+        user_init_password,
+        user_password,
+        user_state,
+        create_date,
+        modify_date,
+        user_number_login_attempts
+        )
+
+        VALUES (
+        #{userRoleId},
+        #{userEmail},
+        #{userAvatar},
+        #{userFirstName},
+        #{userLastName},
+        #{userDateOfBirth},
+        #{userAddress},
+        #{userPhoneNumber},
+        #{userInitPassword},
+        NULL,
+        1,
+        NOW(),
+        NOW(),
+        0)
+    </insert>
+
+
+    <update id="updateUser" parameterType="map">
+        UPDATE user SET
+        user_role_id = #{userRoleId},
+        user_email = #{userEmail},
+        user_avatar= #{userAvatar},
+        user_first_name = #{userFirstName},
+        user_last_name = #{userLastName},
+        user_date_of_birth = #{userDateOfBirth},
+        user_address = #{userAddress},
+        user_phone_number = #{userPhoneNumber},
+<!--        user_password = #{userPassword},-->
+        modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="editUser" parameterType="map">
+        UPDATE user SET
+        user_avatar= #{userAvatar},
+        user_date_of_birth = #{userDateOfBirth},
+        user_address = #{userAddress},
+        user_phone_number = #{userPhoneNumber},
+        <!--        user_password = #{userPassword},-->
+        modify_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="getListInitUser" resultMap="user" parameterType="map">
+        SELECT *
+        FROM user
+        WHERE user_password IS NULL AND user_state = 1
+        ORDER BY user_last_name ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <update id="changePassword" parameterType="map">
+        UPDATE user SET
+        user_password = #{userPassword},
+        user_init_password = NULL,
+        user_last_time_changed_password = NOW()
+        WHERE user_email = #{userEmail}
+    </update>
+
+    <update id="deleteUser" parameterType="map">
+        UPDATE user SET
+        user_state = 2
+        WHERE id = #{id}
+    </update>
+
+    <update id="resetPassword" parameterType="map">
+        UPDATE user SET
+        user_password = NULL,
+        user_init_password = #{initPassword}
+        WHERE id = #{id}
+    </update>
+
+
+    <update id="loginSuccess" parameterType="map">
+        UPDATE user SET
+        user_number_login_attempts = 0
+        WHERE user_email = #{userEmail}
+    </update>
+
+
+    <update id="loginFailedUpdate" parameterType="map">
+        UPDATE user SET
+        user_number_login_attempts = #{userNumberLoginAttempts}
+        WHERE user_email = #{userEmail}
+    </update>
+
+    <update id="lockUser" parameterType="map">
+        UPDATE user SET
+        user_state = 3
+        WHERE user_email = #{userEmail}
+    </update>
+
+
+    <select id="total" resultType="int" parameterType="map">
+        SELECT count(*) FROM user
+        WHERE user_state = 1
+    </select>
+
+    <select id="totalInitUser" resultType="int" parameterType="map">
+        SELECT count(*) FROM user
+        WHERE user_state = 1 AND user_password IS NULL
+    </select>
+
+<!--    <select id="list" resultMap="user" parameterType="map" >-->
+<!--        SELECT * FROM user-->
+<!--        WHERE user_state = 1-->
+<!--        ORDER BY user_last_name ASC-->
+<!--        LIMIT #{limit} OFFSET #{offset}-->
+
+<!--    </select>-->
+
+    <select id="list" resultMap="user_in_list" parameterType="map" >
+        SELECT *
+        FROM user U
+        LEFT OUTER JOIN user_role UR ON UR.id = U.user_role_id
+        WHERE U.user_state = 1
+        ORDER BY user_last_name ASC
+        LIMIT #{limit} OFFSET #{offset}
+
+    </select>
+
+    <select id="listByKeyword" resultMap="user_in_list" parameterType="map" >
+        SELECT *
+        FROM user U
+        LEFT OUTER JOIN user_role UR ON UR.id = U.user_role_id
+        WHERE user_last_name like concat("%", #{keyword},"%")
+<!--        AND user_state = 1-->
+        ORDER BY user_last_name ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+<!--    <select id="listByKeyword" resultMap="user" parameterType="map" >-->
+<!--        SELECT * FROM user-->
+<!--        WHERE user_last_name like concat("%", #{keyword},"%") AND user_state = 1-->
+<!--        ORDER BY user_last_name ASC-->
+<!--        LIMIT #{limit} OFFSET #{offset}-->
+<!--    </select>-->
+
+    <select id="getListInitUserByKeyword" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_last_name like concat("%", #{keyword},"%") AND user_state = 1 AND user_password IS NULL
+        ORDER BY user_last_name ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+
+
+    <select id="getUserById" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE id =#{id}  AND user_state = 1
+        LIMIT 1
+    </select>
+
+    <select id="getUserByUserRoleId" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_role_id =#{id}  AND (user_state = 1 or user_state = 3)
+        LIMIT 1
+    </select>
+
+    <select id="getAllUserByEmail" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_email =#{userEmail}
+        LIMIT 1
+    </select>
+
+    <select id="getInitUserByEmail" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_email =#{userEmail}
+            AND user_password IS NULL
+            AND user_state = 1
+        LIMIT 1
+    </select>
+
+    <select id="getUserAndInitUserById" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE id =#{id}
+        AND user_state = 1
+        LIMIT 1
+    </select>
+
+
+    <select id="getInitUserByEmailAndInitPassword" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_init_password = #{initPassword}
+        AND user_email =#{userEmail}
+        AND user_password IS NULL
+        AND user_state = 1
+        LIMIT 1
+    </select>
+
+    <select id="getUserByEmail" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_email =#{userEmail} AND user_state = 1
+        LIMIT 1
+    </select>
+
+
+
+
+
+    <select id="getListInvitingUser" resultMap="user" parameterType="map">
+        SELECT * FROM user
+        WHERE user_password IS NULL
+    </select>
+
+
+    <select id="login" resultMap="user_login" parameterType="map" >
+        SELECT *
+        FROM user U
+        LEFT OUTER JOIN user_role UR ON UR.id = U.user_role_id
+        WHERE user_email =#{userEmail}
+
+<!--        AND (user_password = #{userPassword} OR user_init_password = userInitPassword)-->
+        AND (user_state = 1 OR user_state = 3)
+        LIMIT 1
+    </select>
+
+
+    <select id="checkLoginUserEmailInitUserPassword" resultMap="user" parameterType="map" >
+        SELECT * FROM user
+        WHERE user_email =#{userEmail}
+        AND user_init_password = #{userInitPassword}
+        AND user_state = 1
+        LIMIT 1
+    </select>
+
+
+
+</mapper>
